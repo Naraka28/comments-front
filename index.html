@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Comment Wall — Discord Style</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=gg+Sans:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --dc-blurple: #5865f2;
+        --dc-blurple-hover: #4752c4;
+        --dc-green: #3ba55c;
+        --dc-red: #ed4245;
+        --dc-yellow: #fee75c;
+
+        --dc-bg-primary: #313338;
+        --dc-bg-secondary: #2b2d31;
+        --dc-bg-tertiary: #1e1f22;
+        --dc-bg-sidebar: #2b2d31;
+        --dc-bg-input: #1e1f22;
+        --dc-bg-card: #2b2d31;
+
+        --dc-text-normal: #dbdee1;
+        --dc-text-muted: #949ba4;
+        --dc-text-header: #f2f3f5;
+        --dc-text-link: #00a8fc;
+
+        --dc-border: #3f4147;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Noto Sans", sans-serif;
+        background-color: var(--dc-bg-primary);
+        color: var(--dc-text-normal);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--dc-bg-tertiary);
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #1a1b1e;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #111214;
+      }
+
+      .topbar {
+        background-color: var(--dc-bg-secondary);
+        border-bottom: 1px solid var(--dc-border);
+        padding: 0 16px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+
+      .topbar-icon {
+        color: var(--dc-text-muted);
+      }
+
+      .topbar-channel {
+        font-family: "Noto Sans", sans-serif;
+        font-weight: 600;
+        font-size: 1rem;
+        color: var(--dc-text-header);
+      }
+
+      .topbar-divider {
+        width: 1px;
+        height: 24px;
+        background: var(--dc-border);
+        margin: 0 8px;
+      }
+
+      .topbar-desc {
+        font-size: 0.875rem;
+        color: var(--dc-text-muted);
+      }
+
+      .app-layout {
+        display: flex;
+        flex: 1;
+        height: calc(100vh - 48px);
+        overflow: hidden;
+      }
+
+      .sidebar {
+        width: 240px;
+        flex-shrink: 0;
+        background-color: var(--dc-bg-sidebar);
+        border-right: 1px solid var(--dc-border);
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        padding: 8px 0;
+      }
+
+      .sidebar-section-header {
+        padding: 16px 16px 4px;
+        font-size: 0.6875rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--dc-text-muted);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .channel-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 2px 8px;
+        margin: 0 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        color: var(--dc-text-muted);
+        font-size: 0.9375rem;
+        font-weight: 500;
+      }
+
+      .channel-item.active {
+        background: #404249;
+        color: var(--dc-text-header);
+      }
+
+      .channel-item:not(.active):hover {
+        background: #35373c;
+        color: #c9cdd2;
+      }
+
+      .channel-item .hash {
+        font-size: 1.25rem;
+        font-weight: 400;
+        line-height: 1;
+        color: inherit;
+        opacity: 0.7;
+      }
+
+      .main-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background-color: var(--dc-bg-primary);
+      }
+
+      .comments-feed {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .comment-card {
+        padding: 2px 16px;
+        display: flex;
+        gap: 16px;
+        position: relative;
+      }
+
+      .comment-card:hover {
+        background-color: #2e3035;
+      }
+
+      .comment-card:hover .delete-btn {
+        opacity: 1;
+      }
+
+      .delete-btn {
+        opacity: 0;
+        position: absolute;
+        top: 0;
+        right: 8px;
+        background: var(--dc-bg-secondary);
+        border: 1px solid var(--dc-border);
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 8px;
+        cursor: pointer;
+        color: var(--dc-text-muted);
+        font-size: 0.75rem;
+      }
+
+      .delete-btn:hover {
+        background: #ed424520;
+        color: var(--dc-red);
+        border-color: var(--dc-red);
+      }
+
+      .input-area {
+        padding: 0 16px 24px;
+        flex-shrink: 0;
+      }
+
+      .input-box {
+        background-color: var(--dc-bg-input);
+        border-radius: 8px;
+        padding: 0;
+        border: none;
+        overflow: hidden;
+      }
+
+      .input-row {
+        display: flex;
+        gap: 8px;
+        padding: 10px 16px;
+        border-top: 1px solid var(--dc-border);
+        align-items: center;
+      }
+
+      .input-row:first-child {
+        border-top: none;
+      }
+
+      .dc-input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: var(--dc-text-normal);
+        font-size: 1rem;
+        font-family: "Noto Sans", sans-serif;
+        resize: none;
+      }
+
+      .dc-input::placeholder {
+        color: var(--dc-text-muted);
+      }
+
+      .input-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--dc-text-muted);
+        white-space: nowrap;
+        min-width: 64px;
+      }
+
+      .publish-btn {
+        background-color: var(--dc-blurple);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 6px 16px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        font-family: "Noto Sans", sans-serif;
+        white-space: nowrap;
+      }
+
+      .publish-btn:hover:not(:disabled) {
+        background-color: var(--dc-blurple-hover);
+      }
+
+      .publish-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .error-text {
+        color: var(--dc-red);
+        font-size: 0.75rem;
+        padding: 0 16px 6px;
+        display: block;
+        min-height: 18px;
+      }
+
+      .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 0.875rem;
+        margin-top: 2px;
+        user-select: none;
+        cursor: pointer;
+      }
+
+      .comment-body {
+        flex: 1;
+        min-width: 0;
+        padding-top: 2px;
+        padding-bottom: 4px;
+      }
+
+      .comment-header {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 4px;
+      }
+
+      .comment-username {
+        font-weight: 600;
+        font-size: 1rem;
+        color: var(--dc-text-header);
+        cursor: pointer;
+      }
+
+      .comment-username:hover {
+        text-decoration: underline;
+      }
+
+      .comment-date {
+        font-size: 0.6875rem;
+        color: var(--dc-text-muted);
+      }
+
+      .comment-message {
+        font-size: 1rem;
+        color: var(--dc-text-normal);
+        line-height: 1.375;
+        word-break: break-word;
+      }
+
+      #toast {
+        position: fixed;
+        top: 64px;
+        right: 24px;
+        z-index: 1000;
+        padding: 12px 16px;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      }
+
+      .empty-state,
+      .loading-state,
+      .error-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 200px;
+        text-align: center;
+        gap: 8px;
+      }
+
+      .online-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.6875rem;
+        color: var(--dc-text-muted);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 0 16px;
+        margin-bottom: 4px;
+      }
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: var(--dc-green);
+        flex-shrink: 0;
+      }
+
+      @media (max-width: 640px) {
+        .sidebar {
+          display: none;
+        }
+
+        .topbar-desc {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <span class="topbar-icon">
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            d="M5.88 2.25A.75.75 0 0 1 6.62 2h10.76a.75.75 0 0 1 .73.58l.54 2.42H3.35l.53-2.75ZM2 6.5h20v1.5a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6.5ZM3.5 10h17v10.25a1.75 1.75 0 0 1-1.75 1.75H5.25A1.75 1.75 0 0 1 3.5 20.25V10Zm5.75 2.25a.75.75 0 0 0 0 1.5h5.5a.75.75 0 0 0 0-1.5h-5.5Z"
+          />
+        </svg>
+      </span>
+      <span class="topbar-channel"># general</span>
+      <span class="topbar-divider"></span>
+      <span class="topbar-desc"
+        >Muro de comentarios · todos son bienvenidos</span
+      >
+    </header>
+
+    <div class="app-layout">
+      <aside class="sidebar">
+        <div class="sidebar-section-header">Canales de texto</div>
+
+        <div class="channel-item active">
+          <span class="hash">#</span>
+          general
+        </div>
+        <div class="channel-item">
+          <span class="hash">#</span>
+          presentaciones
+        </div>
+        <div class="channel-item">
+          <span class="hash">#</span>
+          off-topic
+        </div>
+        <div class="channel-item">
+          <span class="hash">#</span>
+          recursos
+        </div>
+
+        <div class="sidebar-section-header" style="margin-top: 12px">
+          Canales de voz
+        </div>
+        <div class="channel-item">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            style="opacity: 0.6"
+          >
+            <path
+              d="M12 3a1 1 0 0 0-1 1v1.07A8.001 8.001 0 0 0 4 13v1a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1a8.001 8.001 0 0 0-7-7.93V4a1 1 0 0 0-1-1ZM8 20a4 4 0 0 0 8 0H8Z"
+            />
+          </svg>
+          Sala de estudio
+        </div>
+        <div class="channel-item">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            style="opacity: 0.6"
+          >
+            <path
+              d="M12 3a1 1 0 0 0-1 1v1.07A8.001 8.001 0 0 0 4 13v1a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1a8.001 8.001 0 0 0-7-7.93V4a1 1 0 0 0-1-1ZM8 20a4 4 0 0 0 8 0H8Z"
+            />
+          </svg>
+          AFK
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <section class="comments-feed" id="comments-container"></section>
+
+        <div class="input-area">
+          <form class="input-box" id="comment-form" novalidate>
+            <div class="input-row">
+              <label class="input-label" for="username">Usuario</label>
+              <input
+                id="username"
+                type="text"
+                class="dc-input"
+                placeholder="Tu nombre de usuario"
+                autocomplete="off"
+                maxlength="64"
+              />
+            </div>
+            <span class="error-text" id="username-error"></span>
+
+            <div class="input-row">
+              <label class="input-label" for="message">Mensaje</label>
+              <textarea
+                id="message"
+                class="dc-input"
+                placeholder="Escribe un mensaje en #general"
+                rows="2"
+                maxlength="1000"
+              ></textarea>
+              <button class="publish-btn" id="publish-btn" type="submit">
+                Publicar
+              </button>
+            </div>
+            <span class="error-text" id="message-error"></span>
+          </form>
+        </div>
+      </main>
+    </div>
+
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
