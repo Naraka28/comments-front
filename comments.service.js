@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:3000/comments";
+const API_BASE = "https://comments-api-o7wn.onrender.com/comments";
 
 export async function getComments() {
   const response = await fetch(API_BASE);
